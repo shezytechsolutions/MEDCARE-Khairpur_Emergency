@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}Track Ambulances - MedCare Khairpur{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  .admin-card-header {
+    display: flex; align-items: center; gap: 14px; padding: 20px 24px;
+    background: linear-gradient(120deg, var(--navy), var(--navy-light));
+    color: #fff; border-radius: 12px 12px 0 0;
+  }
+  .admin-card-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,174,39,0.22); color: var(--yellow);
+    display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0;
+  }
+  .admin-card-header h5 { margin: 0; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 1.05rem; color: #fff; }
+  .admin-card-header p { margin: 2px 0 0; font-size: 0.78rem; color: rgba(255,255,255,0.75); }
+  .content-card { overflow: hidden; }
+  .live-badge {
+    background: var(--red); color: #fff; font-size: 0.72rem; font-weight: 700;
+    padding: 4px 12px; border-radius: 20px; letter-spacing: 0.5px;
+  }
+  .live-dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: #fff; margin-right: 5px; animation: livePulse 1.5s infinite;
+  }
+  @keyframes livePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .table thead th { background: #f7f9fc; color: var(--navy); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 1px solid var(--border) !important; }
+  .table td { vertical-align: middle; }
+  .status-available { color: #2e7d32; font-weight: 600; }
+  .status-busy { color: #c62828; font-weight: 600; }
+  .status-occupied { color: #c62828; font-weight: 600; }
+  #fleetMap { height: 560px; border-radius: 0 0 12px 12px; z-index: 1; }
+  .amb-popup { font-size: 0.85rem; line-height: 1.5; }
+  @media (max-width: 767px) {
+    #fleetMap { height: 340px; }
+    .admin-card-header { padding: 16px 18px; flex-wrap: wrap; }
+    .table { font-size: 0.85rem; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+{% include 'admin/_nav.html' %}
+
+<!-- ================= PAGE HERO ================= -->
+<div class="about-hero-area about-hero-small">
+  <div class="about-hero-bg"></div>
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-8 col-md-12">
+        <div class="about-hero-content">
+          <h2 class="about-hero-title" style="font-size: 32px; margin-bottom: 8px;">
+            <i class="bi bi-broadcast me-2"></i>Live Ambulance Tracking
+          </h2>
+          <p class="about-hero-text" style="margin-bottom: 0;">
+            Watch the whole 10-unit fleet move in real time across Khairpur ·
+            <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+          </p>
+        </div>
+      </div>
+      <div class="col-lg-4 d-none d-lg-block">
+        <div class="text-center" style="font-size: 5rem; opacity: 0.25;">🚑</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CONTENT ================= -->
+<div class="container section-padding" style="padding-top: 36px; padding-bottom: 50px;">
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="content-card">
+        <div class="admin-card-header">
+          <div class="admin-card-icon"><i class="bi bi-map"></i></div>
+          <div class="flex-grow-1">
+            <h5>Fleet Map</h5>
+            <p id="fleetCounts">loading…</p>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div id="fleetMap"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="content-card">
+        <div class="admin-card-header">
+          <div class="admin-card-icon"><i class="bi bi-list-check"></i></div>
+          <div>
+            <h5>Fleet Status</h5>
+            <p>Unit · Status · Case · ETA</p>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0" id="fleetTable">
+              <thead><tr><th>Unit</th><th>Status</th><th>Case</th><th>ETA</th></tr></thead>
+              <tbody><tr><td colspan="4" class="text-center text-muted py-4">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container text-center">
+    <p class="mb-0">&copy; 2026 MedCare Emergency Resource Manager · OpenHack26 · Team HT-03</p>
+    <p class="mb-0 powered-by">Powered by <strong>Musafir Devs</strong></p>
+  </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  /* ===== Mobile sidebar ===== */
+  const sidebar = document.getElementById('mobileSidebar');
+  const sidebarOverlay = document.getElementById('mobileSidebarOverlay');
+  const hamburger = document.getElementById('mobileHamburger');
+  function openSidebar() {
+    sidebar.classList.add('open'); sidebarOverlay.classList.add('open');
+    hamburger.classList.add('active'); document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open'); sidebarOverlay.classList.remove('open');
+    hamburger.classList.remove('active'); document.body.style.overflow = '';
+  }
+  hamburger?.addEventListener('click', e => { e.preventDefault(); sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); });
+  document.getElementById('mobileSidebarClose')?.addEventListener('click', e => { e.preventDefault(); closeSidebar(); });
+  sidebarOverlay?.addEventListener('click', closeSidebar);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+
+  /* ===== Live fleet map ===== */
+  const API = "{{ url_for('ambulances_live') }}";
+  let map, markers = {}, initialized = false;
+
+  function initMap() {
+    map = L.map('fleetMap').setView([27.53, 68.76], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18, attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+    initialized = true;
+  }
+
+  async function poll() {
+    try {
+      const res = await fetch(API);
+      const d = await res.json();
+      if (!initialized) initMap();
+
+      document.getElementById('fleetCounts').textContent =
+        d.counts.available + ' available · ' + d.counts.on_the_way + ' on the way · ' +
+        d.counts.occupied + ' occupied · ' + d.counts.total + ' total';
+
+      const tbody = document.querySelector('#fleetTable tbody');
+      tbody.innerHTML = '';
+
+      d.ambulances.forEach(a => {
+        const pos = [a.position.lat, a.position.lng];
+        if (markers[a.id]) {
+          markers[a.id].setLatLng(pos);
+        } else {
+          markers[a.id] = L.marker(pos, {
+            icon: L.divIcon({className: '', html: a.status === 'Available' ? '🟢' : '🚑', iconSize: [30, 30]})
+          }).addTo(map);
+        }
+        let popup = '<div class="amb-popup"><strong>' + a.unit + '</strong> (' + a.type + ')<br>' +
+          'Status: <strong>' + a.status + '</strong>';
+        if (a.case) {
+          popup += '<br>Case: <strong>' + a.case.code + '</strong> — ' + a.case.patient +
+            ' (' + a.case.priority + ')' +
+            (a.case.doctor ? '<br>Doctor: ' + a.case.doctor : '') +
+            (a.case.bed ? '<br>Bed: ' + a.case.bed : '');
+          if (a.patient && !markers['p' + a.id]) {
+            markers['p' + a.id] = L.marker([a.patient.lat, a.patient.lng], {
+              icon: L.divIcon({className: '', html: '📍', iconSize: [26, 26]})
+            }).addTo(map).bindPopup('Patient pickup — ' + a.case.code);
+          }
+          if (a.hospital_pos && !markers['h' + a.id]) {
+            markers['h' + a.id] = L.marker([a.hospital_pos.lat, a.hospital_pos.lng], {
+              icon: L.divIcon({className: '', html: '🏥', iconSize: [26, 26]})
+            }).addTo(map).bindPopup(a.hospital_pos.name);
+          }
+        }
+        popup += '</div>';
+        markers[a.id].bindPopup(popup);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td><strong>' + a.unit + '</strong></td>' +
+          '<td class="' +
+            (a.status === 'Available' ? 'status-available' :
+             a.status === 'On the way' ? 'status-busy' : 'status-occupied') +
+          '">' + a.status + '</td>' +
+          '<td class="small">' + (a.case ? a.case.code + ' · ' + a.case.patient : '—') + '</td>' +
+          '<td class="small">' + (a.eta_min != null && a.phase !== 'arrived' ? a.eta_min + ' min' :
+            (a.phase === 'arrived' ? '✅ arrived' : '—')) + '</td>';
+        tbody.appendChild(tr);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  poll();
+  setInterval(poll, 2000);
+</script>
+{% endblock %}

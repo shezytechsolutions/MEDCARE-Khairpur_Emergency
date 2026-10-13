@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Login - MedCare Khairpur{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  .login-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .login-hero {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 15px 60px;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(255,174,39,0.06) 0 160px, transparent 161px),
+      radial-gradient(circle at 88% 78%, rgba(31,57,113,0.06) 0 180px, transparent 181px),
+      var(--bg);
+  }
+  .login-card {
+    width: 100%;
+    max-width: 440px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 16px 48px rgba(31,57,113,0.12);
+  }
+  .login-card-header {
+    background: #ffffff;
+    border-bottom: 3px solid var(--red);
+    padding: 32px 24px 22px;
+    text-align: center;
+  }
+  .login-logo {
+    width: 210px; height: 63px;
+    object-fit: contain;
+    margin: 0 auto 6px;
+    display: block;
+  }
+  .login-card-header h4 {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #fff;
+  }
+  .login-card-header p {
+    margin: 4px 0 0;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .login-icon-badge {
+    width: 58px; height: 58px;
+    border-radius: 50%;
+    background: rgba(255,174,39,0.22);
+    color: var(--yellow);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    margin: 0 auto 14px;
+  }
+  .login-body { padding: 30px 26px 24px; }
+  .login-body .form-label {
+    font-size: 0.83rem; font-weight: 600; color: var(--navy); margin-bottom: 6px;
+  }
+  .login-body .form-control {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.93rem;
+    background: #fbfcfe;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  }
+  .login-body .form-control:focus {
+    border-color: var(--navy);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(31,57,113,0.10);
+  }
+  .input-icon-group { position: relative; }
+  .input-icon-group i {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 0.95rem; pointer-events: none;
+  }
+  .input-icon-group .form-control { padding-left: 42px; }
+  .btn-login {
+    width: 100%;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .btn-login:hover {
+    background: #c62828;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(229,57,53,0.35);
+  }
+  .btn-login:active { transform: translateY(0); }
+  .demo-box {
+    margin-top: 20px;
+    background: #f7f9fc;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.8rem;
+    color: var(--dark);
+  }
+  .demo-box code {
+    background: #e8eefb; color: var(--navy);
+    padding: 1px 6px; border-radius: 6px; font-size: 0.78rem;
+  }
+  .demo-role {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+  }
+  .demo-role:last-child { margin-bottom: 0; }
+  .demo-chip {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; flex-shrink: 0;
+  }
+  @media (max-width: 400px) {
+    .login-body { padding: 20px 18px 18px; }
+    .login-card-header { padding: 24px 18px 20px; }
+    .login-logo { width: 150px; height: 45px; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="login-page">
+  <div class="login-hero">
+    <div class="login-card">
+      <div class="login-card-header">
+        <img src="{{ url_for('static', filename='img/logo101.png') }}" alt="MedCare Emergency Logo" class="login-logo"
+             onerror="this.style.display='none'">
+        <p>Emergency Resource Manager · Khairpur</p>
+      </div>
+
+      <div class="login-body">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} py-2 small">{{ message }}</div>
+          {% endfor %}
+        {% endwith %}
+
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <div class="input-icon-group">
+              <i class="bi bi-person"></i>
+              <input type="text" name="username" class="form-control" required
+                     placeholder="e.g. admin / drsara / amb1" autofocus>
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Password</label>
+            <div class="input-icon-group">
+              <i class="bi bi-lock"></i>
+              <input type="password" name="password" class="form-control" required placeholder="••••••••">
+            </div>
+          </div>
+          <button type="submit" class="btn-login">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Login
+          </button>
+        </form>
+
+        <div class="demo-box">
+          <strong><i class="bi bi-key me-1"></i>Demo Accounts</strong>
+          <div class="mt-2">
+            <div class="demo-role">
+              <div class="demo-chip" style="background:#e8eefb;color:#1F3971;">🛡️</div>
+              <span>Admin → <code>admin</code> / <code>admin123</code></span>
+            </div>
+            <div class="demo-role">
+              <div class="demo-chip" style="background:#fdecea;color:#e53935;">🩺</div>
+              <span>Doctor → <code>drsara</code> / <code>doctor123</code></span>
+            </div>
+            <div class="demo-role">
+              <div class="demo-chip" style="background:#fff4dd;color:#b97c00;">🚑</div>
+              <span>Ambulance → <code>amb1</code> / <code>amb123</code></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center mt-3">
+          <a href="{{ url_for('index') }}" class="small" style="color:var(--muted);">
+            <i class="bi bi-arrow-left me-1"></i>Back to Home
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer" style="margin-bottom: 0;">
+    <div class="container text-center">
+      <p class="mb-0">&copy; 2026 MedCare Emergency Resource Manager · OpenHack26 · Team HT-03</p>
+      <p class="mb-0 powered-by">Powered by <strong>Musafir Devs</strong></p>
+    </div>
+  </footer>
+</div>
+{% endblock %}

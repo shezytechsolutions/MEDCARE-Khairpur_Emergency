@@ -1,0 +1,507 @@
+{% extends "base.html" %}
+{% block title %}MedCare - Emergency Resource Manager (Khairpur){% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<!-- ================= HEADER ================= -->
+<header>
+  <!-- Top bar: on mobile show ONLY the phone number (no emergency tag) -->
+  <div class="header-top">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-7 col-lg-7">
+          <span class="ht-question d-none d-md-inline"><i class="bi bi-question-circle me-1"></i> Need help? We are 24/7 available</span>
+          <a href="tel:+923001234567" class="ht-phone-mobile d-md-none"><i class="bi bi-telephone-fill me-1"></i> +92 300 1234567</a>
+        </div>
+        <div class="col-5 col-lg-5 text-end">
+          <span class="ht-phone d-none d-md-inline"><i class="bi bi-telephone me-1"></i> +92 300 1234567</span>
+          <span class="ht-emergency d-none d-md-inline"><i class="bi bi-telephone-fill me-1"></i> THE Emergency Contacts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop: logo + nav (sticky) -->
+  <div class="header-logo-menu sticker">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-3 col-12">
+          <div class="logo">
+            <a href="{{ url_for('index') }}">
+              <img src="{{ url_for('static', filename='img/logo101.png') }}" alt="MedCare Emergency Logo" class="brand-logo">
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-9 col-12">
+          <div class="mainmenu-area">
+            <nav class="mainmenu d-none d-lg-block">
+              <ul id="nav">
+                <li class="current"><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('request_help') }}">Emergency</a></li>
+                <li><a href="{{ url_for('request_help') }}" class="nav-ambulance">Ambulance</a></li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile: white bar (logo + hamburger) -->
+  <div class="mobile-menu-area">
+    <div class="mobile-topbar-inner">
+      <div class="mobile-logo">
+        <a href="{{ url_for('index') }}">
+          <img src="{{ url_for('static', filename='img/logo101.png') }}" alt="MedCare Emergency Logo" class="brand-logo">
+        </a>
+      </div>
+      <div class="mobile-topbar-right">
+        <a href="#" class="mobile-hamburger" id="mobileHamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile slide-out sidebar -->
+  <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay"></div>
+  <aside class="mobile-sidebar" id="mobileSidebar">
+    <div class="mobile-sidebar-header">
+      <span>Menu</span>
+      <a href="#" class="mobile-sidebar-close" id="mobileSidebarClose" aria-label="Close">&times;</a>
+    </div>
+    <nav class="mobile-sidebar-nav">
+      <ul>
+        <li><a href="{{ url_for('index') }}"><i class="bi bi-house-door me-2"></i> Home</a></li>
+        <li><a href="{{ url_for('request_help') }}"><i class="bi bi-exclamation-triangle me-2"></i> Emergency</a></li>
+        <li><a href="{{ url_for('request_help') }}"><i class="bi bi-ambulance me-2"></i> Ambulance</a></li>
+      </ul>
+    </nav>
+  </aside>
+</header>
+
+<!-- ================= HERO (about-hero style) ================= -->
+<div class="about-hero-area reveal-on-scroll">
+  <div class="about-hero-bg"></div>
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-6 col-md-12">
+        <div class="about-hero-content">
+          <h2 class="about-hero-title">Saving Lives When<br>Every Second Counts</h2>
+          <p class="about-hero-text">
+            MedCare Khairpur — a smart Emergency Resource Manager. Register an emergency
+            in under a minute, get the 3 nearest hospitals, auto-dispatch an ambulance
+            from our 10-unit fleet and track it live on the map.
+          </p>
+          <a href="{{ url_for('request_help') }}" class="about-hero-btn">Request Emergency Help</a>
+          <div class="about-hero-stats">
+            <div class="about-stat-item">
+              <div class="about-stat-icon"><i class="bi bi-ambulance"></i></div>
+              <div>
+                <h4>10</h4>
+                <span>Ambulances</span>
+              </div>
+            </div>
+            <div class="about-stat-item">
+              <div class="about-stat-icon"><i class="bi bi-hospital"></i></div>
+              <div>
+                <h4>5</h4>
+                <span>Hospitals</span>
+              </div>
+            </div>
+            <div class="about-stat-item">
+              <div class="about-stat-icon"><i class="bi bi-people"></i></div>
+              <div>
+                <h4>15+</h4>
+                <span>Staff</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 col-md-12">
+        <div class="about-hero-image">
+          <img src="/static/img/doc101.jpeg"
+                 alt="MedCare Emergency Team"
+                 onerror="this.src='https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=700&h=800&fit=crop'">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= FEATURES ================= -->
+<div class="course-area section-padding reveal-on-scroll">
+  <div class="container">
+    <div class="row g-4 text-center">
+      <div class="col-md-4">
+        <div class="feature-mini">
+          <div class="feature-icon feature-icon-red mx-auto"><i class="bi bi-exclamation-triangle"></i></div>
+          <h6 class="mt-3 mb-1">Emergency Intake</h6>
+          <p class="text-muted small mb-0">Register a case in under a minute</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-mini">
+          <div class="feature-icon feature-icon-blue mx-auto"><i class="bi bi-hospital"></i></div>
+          <h6 class="mt-3 mb-1">Smart Allocation</h6>
+          <p class="text-muted small mb-0">Beds &amp; doctors auto-assigned by severity</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-mini">
+          <div class="feature-icon feature-icon-yellow mx-auto"><i class="bi bi-geo-alt"></i></div>
+          <h6 class="mt-3 mb-1">Live Tracking</h6>
+          <p class="text-muted small mb-0">Watch the ambulance move on the map</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= FOOTER ================= -->
+<footer class="site-footer">
+  <div class="container text-center">
+    <p class="mb-0">&copy; 2026 MedCare Emergency Resource Manager · OpenHack26 · Team HT-03</p>
+    <p class="mb-0 powered-by">Powered by <strong>Musafir Devs</strong></p>
+  </div>
+</footer>
+
+<!-- ================= AI ASSISTANT BOTTOM BAR (150px, full width) ================= -->
+<div class="ai-bottom-bar" id="aiBottomBar">
+  <div class="ai-bar-inner">
+    <div class="ai-bar-left">
+      <div class="ai-avatar"><i class="bi bi-robot"></i></div>
+      <div>
+        <strong>MedCare AI Assistant</strong>
+        <span class="d-block">Guided emergency intake · Nearby hospitals · Ambulance dispatch · Tap to open</span>
+      </div>
+    </div>
+    <div class="ai-bar-open-btn"><i class="bi bi-chevron-up"></i></div>
+  </div>
+</div>
+
+<!-- ================= FULL SCREEN AI ASSISTANT (slides up from bottom) ================= -->
+<div id="aiAssistantOverlay" class="ai-overlay">
+  <div class="ai-overlay-inner">
+    <div class="ai-overlay-header">
+      <div class="d-flex align-items-center gap-2">
+        <div class="ai-avatar large"><i class="bi bi-robot"></i></div>
+        <div>
+          <strong>MedCare AI Assistant</strong>
+          <small class="d-block opacity-75">Guided emergency intake · Nearby hospitals · Ambulance dispatch</small>
+        </div>
+      </div>
+      <button type="button" class="btn-close-ai" id="closeAssistantBtn" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="ai-chat-area" id="aiChatArea">
+      <div class="ai-msg bot">
+        <div class="ai-msg-content">
+          Assalam-o-Alaikum! Main MedCare AI Assistant hoon.<br>
+          I can help you:<br>
+          • 🚨 Register an emergency in under a minute<br>
+          • 🏥 Find the 3 nearest hospitals<br>
+          • 🚑 Dispatch an ambulance (10-unit fleet, 20 km range)<br>
+          • 🗺️ Track the ambulance live on a map
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-quick-actions">
+      <button class="ai-chip" data-q="emergency">🚨 New Emergency Request</button>
+      <button class="ai-chip" data-q="help">Request Help</button>
+      <button class="ai-chip" data-q="hospital">Nearby Hospitals</button>
+      <button class="ai-chip" data-q="ambulance">Ambulance Info</button>
+    </div>
+
+    <div class="ai-input-area">
+      <input type="text" id="aiInput" class="form-control" placeholder="Type your answer or question..." autocomplete="off">
+      <button type="button" class="btn btn-primary" id="aiSendBtn">
+        <i class="bi bi-send-fill"></i>
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /* ===== Scroll reveal (progressive enhancement) ===== */
+  document.documentElement.classList.add('js-reveal');
+  const revealEls = document.querySelectorAll('.reveal-on-scroll');
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (en.isIntersecting) { en.target.classList.add('revealed'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12 });
+    revealEls.forEach(el => io.observe(el));
+  } else {
+    revealEls.forEach(el => el.classList.add('revealed'));
+  }
+
+  /* ===== Mobile sidebar ===== */
+  const sidebar = document.getElementById('mobileSidebar');
+  const sidebarOverlay = document.getElementById('mobileSidebarOverlay');
+  const hamburger = document.getElementById('mobileHamburger');
+  function openSidebar() {
+    sidebar.classList.add('open');
+    sidebarOverlay.classList.add('open');
+    hamburger.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    sidebarOverlay.classList.remove('open');
+    hamburger.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  hamburger?.addEventListener('click', e => { e.preventDefault(); sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); });
+  document.getElementById('mobileSidebarClose')?.addEventListener('click', e => { e.preventDefault(); closeSidebar(); });
+  sidebarOverlay?.addEventListener('click', closeSidebar);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+
+  /* ===== AI assistant: bottom bar -> full screen ===== */
+  const overlay = document.getElementById('aiAssistantOverlay');
+  const chatArea = document.getElementById('aiChatArea');
+  const aiInput = document.getElementById('aiInput');
+  const aiBottomBar = document.getElementById('aiBottomBar');
+
+  function openAssistant() {
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => aiInput.focus(), 450);
+  }
+  function closeAssistant() {
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  aiBottomBar?.addEventListener('click', openAssistant);
+  document.getElementById('closeAssistantBtn')?.addEventListener('click', closeAssistant);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) closeAssistant();
+  });
+
+  function addMessage(html, type) {
+    const div = document.createElement('div');
+    div.className = 'ai-msg ' + type;
+    div.innerHTML = '<div class="ai-msg-content">' + html + '</div>';
+    chatArea.appendChild(div);
+    chatArea.scrollTop = chatArea.scrollHeight;
+    return div;
+  }
+
+  function quickReply(opts) {
+    const wrap = document.createElement('div');
+    wrap.className = 'ai-msg bot';
+    wrap.innerHTML = '<div class="ai-msg-content d-flex flex-wrap gap-2"></div>';
+    opts.forEach(o => {
+      const b = document.createElement('button');
+      b.className = 'ai-chip'; b.textContent = o.label;
+      b.onclick = () => handleAnswer(o.value);
+      wrap.querySelector('.ai-msg-content').appendChild(b);
+    });
+    chatArea.appendChild(wrap);
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+
+  // ====== GUIDED EMERGENCY FLOW STATE MACHINE ======
+  let flow = null;
+
+  function resetFlow() {
+    flow = { step: 'name', data: {} };
+    addMessage("Assalam-o-Alaikum! I am the MedCare AI Assistant. I will register your emergency in under a minute.<br><br><strong>Patient ka naam kya hai?</strong> (What is the patient's name?)", 'bot');
+  }
+
+  async function handleAnswer(val) {
+    if (!flow) { resetFlow(); return; }
+    const d = flow.data;
+    switch (flow.step) {
+      case 'name':
+        d.patient_name = val;
+        flow.step = 'age';
+        addMessage("Patient ki umar? (Age in numbers)", 'bot');
+        break;
+      case 'age':
+        if (isNaN(parseInt(val))) { addMessage('Please enter a valid number for age.', 'bot'); break; }
+        d.age = parseInt(val);
+        flow.step = 'condition';
+        addMessage("Emergency kiya hai? Briefly describe the condition / symptoms.", 'bot');
+        break;
+      case 'condition':
+        d.condition = val;
+        flow.step = 'priority';
+        addMessage("Kitni severity hai? (How severe is it?)", 'bot');
+        quickReply([
+          {label: '🔴 Critical (life-threatening)', value: 'Critical'},
+          {label: '🟠 High', value: 'High'},
+          {label: '🟡 Medium', value: 'Medium'},
+          {label: '🟢 Low', value: 'Low'}
+        ]);
+        break;
+      case 'priority':
+        d.priority = val;
+        flow.step = 'location';
+        addMessage("Aap ki location? Type the area, or tap the GPS button:", 'bot');
+        const wrap = document.createElement('div');
+        wrap.className = 'ai-msg bot';
+        wrap.innerHTML = '<div class="ai-msg-content"><button class="ai-chip" id="geoBtn">📍 Use my current GPS location</button></div>';
+        chatArea.appendChild(wrap);
+        wrap.querySelector('#geoBtn').onclick = () => {
+          if (!navigator.geolocation) { addMessage('GPS not supported. Please type your area as text.', 'bot'); return; }
+          navigator.geolocation.getCurrentPosition(p => {
+            d.lat = p.coords.latitude; d.lng = p.coords.longitude;
+            addMessage('✅ Location captured: ' + d.lat.toFixed(4) + ', ' + d.lng.toFixed(4), 'bot');
+            showHospitals();
+          }, () => addMessage('GPS unavailable. Please type your area/address as text instead.', 'bot'));
+        };
+        break;
+      case 'location':
+        d.address = val;
+        // demo coords around Khairpur when GPS not used
+        if (!d.lat) { d.lat = 27.5300 + (Math.random()*0.02-0.01); d.lng = 68.7600 + (Math.random()*0.02-0.01); }
+        showHospitals();
+        break;
+      case 'hospital':
+        d.hospital_name = val;
+        flow.step = 'ambulance';
+        addMessage("Kya aap ko ambulance chahiye? (Do you need an ambulance?)", 'bot');
+        quickReply([
+          {label: '🚑 Yes, send ambulance', value: 'yes'},
+          {label: '🚗 No, coming on my own', value: 'no'}
+        ]);
+        break;
+      case 'ambulance':
+        d.needs_ambulance = (val === 'yes');
+        if (d.needs_ambulance) checkAmbulanceThenSubmit();
+        else submitRequest();
+        break;
+      case 'ambulance_none':
+        if (val === 'yes_anyway') {
+          d.needs_ambulance = true;
+          submitRequest();
+        } else {
+          addMessage('Request cancelled. Stay safe — you can start again anytime.', 'bot');
+          flow = null;
+        }
+        break;
+    }
+  }
+
+  // ====== AMBULANCE AVAILABILITY CHECK (10-unit fleet) ======
+  async function checkAmbulanceThenSubmit() {
+    try {
+      const res = await fetch('{{ url_for("ambulance_status") }}');
+      const s = await res.json();
+      if (s.available === 0) {
+        addMessage('⚠️ <strong>Sorry — there is no available ambulance at the time.</strong><br>' +
+          'All ' + s.total + ' units are currently on the way or occupied.<br>' +
+          'You can still register the case — hospital staff will dispatch a unit as soon as one frees up, or you can arrange your own transport.', 'bot');
+        flow.step = 'ambulance_none';
+        quickReply([
+          {label: '✅ Register case anyway', value: 'yes_anyway'},
+          {label: '❌ Cancel request', value: 'cancel'}
+        ]);
+        return;
+      }
+    } catch (e) { /* if check fails, still try to submit */ }
+    submitRequest();
+  }
+
+  // ====== NEARBY HOSPITALS ======
+  async function showHospitals() {
+    addMessage('🔎 Checking nearest hospitals in Khairpur…', 'bot');
+    const q = new URLSearchParams({lat: flow.data.lat, lng: flow.data.lng});
+    const res = await fetch('{{ url_for("nearby_hospitals") }}?' + q);
+    const data = await res.json();
+    flow.step = 'hospital';
+    addMessage('Ye 3 hospitals aap ke qareeb hain. Select one:', 'bot');
+    const wrap = document.createElement('div');
+    wrap.className = 'ai-msg bot';
+    wrap.innerHTML = '<div class="ai-msg-content d-flex flex-column gap-2"></div>';
+    (data.hospitals || []).forEach((h, i) => {
+      const b = document.createElement('button');
+      b.className = 'ai-chip text-start';
+      b.innerHTML = '<strong>' + (i+1) + '. ' + h.name + '</strong><br><small>' +
+        h.distance_km + ' km away · ICU beds: ' + h.icu_beds + ' · ER beds: ' + h.er_beds + '</small>';
+      b.onclick = () => handleAnswer(h.name);
+      wrap.querySelector('.ai-msg-content').appendChild(b);
+    });
+    chatArea.appendChild(wrap);
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+
+  // ====== SUBMIT + AUTO ALLOCATION ======
+  async function submitRequest() {
+    addMessage('⏳ Registering your emergency and allocating resources…', 'bot');
+    try {
+      const res = await fetch('{{ url_for("create_request") }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(flow.data)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const a = data.allocation;
+        let msg = '✅ <strong>Request created: ' + data.case_code + '</strong><br>';
+        if (a.ambulance) {
+          msg += '🚑 <strong>Ambulance ' + a.ambulance + ' is moving to your location!</strong><br>';
+          if (a.ambulance_eta_min) msg += '⏱️ It will reach you in about <strong>' + a.ambulance_eta_min + ' minutes</strong>.<br>';
+        } else if (flow.data.needs_ambulance) {
+          msg += '⚠️ No ambulance was available at the moment — staff will dispatch one as soon as possible.<br>';
+        }
+        if (a.doctor) msg += '👨‍⚕️ Doctor assigned: <strong>' + a.doctor + '</strong><br>';
+        if (a.bed) msg += '🛏️ Bed reserved: <strong>' + a.bed + '</strong><br>';
+        msg += '📦 Ambulances still available: <strong>' + a.ambulances_available + ' / 10</strong><br>' +
+          '<a href="' + data.track_url + '" class="btn btn-sm btn-primary mt-2"><i class="bi bi-map me-1"></i>Watch Ambulance Moving on Map</a>';
+        addMessage(msg, 'bot');
+        chatArea.scrollTop = chatArea.scrollHeight;
+        flow = null;
+      } else {
+        addMessage('⚠️ Something went wrong. Please try again or use the Request Help page.', 'bot');
+      }
+    } catch (e) {
+      addMessage('⚠️ Network error. Please try again.', 'bot');
+    }
+  }
+
+  // ====== QUICK CHIPS + TYPED INPUT ======
+  document.querySelectorAll('.ai-chip[data-q]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const q = chip.getAttribute('data-q');
+      if (q === 'ambulance') {
+        fetch('{{ url_for("ambulance_status") }}').then(r => r.json()).then(s => {
+          addMessage('🚑 Fleet status: <strong>' + s.available + ' of ' + s.total +
+            '</strong> ambulances available right now (' + s.on_the_way + ' on the way, ' + s.occupied + ' occupied). Service range: 20 km around Khairpur.', 'bot');
+        }).catch(() => addMessage('Could not fetch fleet status.', 'bot'));
+        return;
+      }
+      if (q === 'hospital') {
+        addMessage('Sure! I just need a few details first.', 'bot');
+        resetFlow();
+        return;
+      }
+      resetFlow(); // emergency / help
+    });
+  });
+
+  document.getElementById('aiSendBtn')?.addEventListener('click', sendTyped);
+  aiInput?.addEventListener('keydown', e => { if (e.key === 'Enter') sendTyped(); });
+
+  function sendTyped() {
+    const text = aiInput.value.trim();
+    if (!text) return;
+    addMessage(text, 'user');
+    aiInput.value = '';
+    if (flow) handleAnswer(text);
+    else resetFlow();
+  }
+</script>
+{% endblock %}

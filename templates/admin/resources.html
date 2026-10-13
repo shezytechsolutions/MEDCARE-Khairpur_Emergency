@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% block title %}Resources - MedCare Khairpur{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  .admin-card-header {
+    display: flex; align-items: center; gap: 14px; padding: 20px 24px;
+    background: linear-gradient(120deg, var(--navy), var(--navy-light));
+    color: #fff; border-radius: 12px 12px 0 0;
+  }
+  .admin-card-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,174,39,0.22); color: var(--yellow);
+    display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0;
+  }
+  .admin-card-header h5 { margin: 0; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 1.05rem; color: #fff; }
+  .admin-card-header p { margin: 2px 0 0; font-size: 0.78rem; color: rgba(255,255,255,0.75); }
+  .content-card { overflow: hidden; }
+
+  .res-pills .nav-link {
+    border-radius: 20px; font-weight: 600; font-size: 0.88rem;
+    color: var(--navy); padding: 9px 20px; margin-right: 6px;
+    border: 1px solid var(--border); background: #fff;
+    transition: all 0.2s ease;
+  }
+  .res-pills .nav-link:hover { border-color: var(--navy); }
+  .res-pills .nav-link.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  .table thead th { background: #f7f9fc; color: var(--navy); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 1px solid var(--border) !important; }
+  .table td { vertical-align: middle; }
+  .status-available { color: #2e7d32; font-weight: 600; }
+  .status-busy { color: #c62828; font-weight: 600; }
+  .status-oncall { color: #b97c00; font-weight: 600; }
+  .status-occupied { color: #c62828; font-weight: 600; }
+  .live-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--red); margin-right: 5px;
+    animation: livePulse 1.5s infinite;
+  }
+  @keyframes livePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .update-select {
+    border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 6px 10px; font-size: 0.82rem; background: #fbfcfe;
+    transition: all 0.2s ease;
+  }
+  .update-select:focus { border-color: var(--navy); box-shadow: 0 0 0 4px rgba(31,57,113,0.10); }
+  @media (max-width: 767px) {
+    .admin-card-header { padding: 16px 18px; flex-wrap: wrap; }
+    .table { font-size: 0.85rem; }
+    .res-pills .nav-link { padding: 8px 14px; font-size: 0.8rem; margin-right: 4px; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+{% include 'admin/_nav.html' %}
+
+<!-- ================= PAGE HERO ================= -->
+<div class="about-hero-area about-hero-small">
+  <div class="about-hero-bg"></div>
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-8 col-md-12">
+        <div class="about-hero-content">
+          <h2 class="about-hero-title" style="font-size: 32px; margin-bottom: 8px;">
+            <i class="bi bi-boxes me-2"></i>Hospital Resources
+          </h2>
+          <p class="about-hero-text" style="margin-bottom: 0;">
+            Beds · Doctors · Ambulances (20 km range) ·
+            <span class="badge bg-danger"><span class="live-dot"></span>LIVE</span> auto-refresh every 5s
+          </p>
+        </div>
+      </div>
+      <div class="col-lg-4 d-none d-lg-block">
+        <div class="text-center" style="font-size: 5rem; opacity: 0.25;">🛏️</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CONTENT ================= -->
+<div class="container section-padding" style="padding-top: 36px; padding-bottom: 50px;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show py-2 form-alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="mb-3">
+    <div class="alert alert-info py-2 small mb-0 form-alert">
+      <i class="bi bi-arrow-repeat me-1"></i> Statuses update automatically: when a case is allocated, the assigned
+      bed becomes <strong>Occupied</strong>, the doctor becomes <strong>Busy</strong>, and the ambulance shows
+      <strong>On the way</strong>. When a case is closed, everything frees up again.
+    </div>
+  </div>
+
+  <ul class="nav nav-pills res-pills mb-3">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#beds">🛏️ Beds ({{ beds|length }})</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#doctors">👨‍⚕️ Doctors ({{ doctors|length }})</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#ambulances">🚑 Ambulances ({{ ambulances|length }})</a></li>
+  </ul>
+
+  <div class="tab-content">
+    <!-- Beds -->
+    <div class="tab-pane fade show active" id="beds">
+      <div class="content-card">
+        <div class="admin-card-header">
+          <div class="admin-card-icon"><i class="bi bi-door-open"></i></div>
+          <div>
+            <h5>Hospital Beds</h5>
+            <p>ICU · Emergency · General · Isolation</p>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead><tr><th>Code</th><th>Type</th><th>Status</th><th>Assigned Case</th><th>Action</th></tr></thead>
+              <tbody>
+                {% for b in beds %}
+                <tr>
+                  <td><strong>{{ b.bed_code }}</strong></td>
+                  <td>{{ b.bed_type }}</td>
+                  <td class="{% if b.status=='Available' %}status-available{% else %}status-occupied{% endif %}">{{ b.status }}</td>
+                  <td class="small">{{ b.assigned_case_id or '—' }}</td>
+                  <td>
+                    <form method="POST" action="{{ url_for('update_resource') }}" class="d-inline">
+                      <input type="hidden" name="type" value="bed">
+                      <input type="hidden" name="id" value="{{ b.id }}">
+                      <select name="status" class="form-select form-select-sm update-select d-inline-block w-auto" onchange="this.form.submit()">
+                        <option value="Available" {% if b.status=='Available' %}selected{% endif %}>Available</option>
+                        <option value="Occupied" {% if b.status=='Occupied' %}selected{% endif %}>Occupied</option>
+                      </select>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Doctors -->
+    <div class="tab-pane fade" id="doctors">
+      <div class="content-card">
+        <div class="admin-card-header">
+          <div class="admin-card-icon"><i class="bi bi-person-badge"></i></div>
+          <div>
+            <h5>Doctors</h5>
+            <p>Specialists and emergency physicians</p>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead><tr><th>Name</th><th>Specialty</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                {% for d in doctors %}
+                <tr>
+                  <td><strong>{{ d.name }}</strong></td>
+                  <td>{{ d.specialty }}</td>
+                  <td class="{% if d.status=='Available' %}status-available{% elif d.status=='Busy' %}status-busy{% else %}status-oncall{% endif %}">{{ d.status }}</td>
+                  <td>
+                    <form method="POST" action="{{ url_for('update_resource') }}" class="d-inline">
+                      <input type="hidden" name="type" value="doctor">
+                      <input type="hidden" name="id" value="{{ d.id }}">
+                      <select name="status" class="form-select form-select-sm update-select d-inline-block w-auto" onchange="this.form.submit()">
+                        <option value="Available" {% if d.status=='Available' %}selected{% endif %}>Available</option>
+                        <option value="Busy" {% if d.status=='Busy' %}selected{% endif %}>Busy</option>
+                        <option value="On-call" {% if d.status=='On-call' %}selected{% endif %}>On-call</option>
+                      </select>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ambulances -->
+    <div class="tab-pane fade" id="ambulances">
+      <div class="content-card">
+        <div class="admin-card-header">
+          <div class="admin-card-icon"><i class="bi bi-ambulance"></i></div>
+          <div class="flex-grow-1">
+            <h5>Ambulances</h5>
+            <p>10-unit fleet · Max 20 km range around Khairpur</p>
+          </div>
+          <a href="{{ url_for('admin_track') }}" class="btn btn-sm" style="background:var(--red);color:#fff;font-weight:700;">
+            <i class="bi bi-broadcast me-1"></i>Track Live
+          </a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead><tr><th>Unit</th><th>Type</th><th>Status</th><th>Location</th><th>Action</th></tr></thead>
+              <tbody>
+                {% for a in ambulances %}
+                <tr>
+                  <td><strong>{{ a.vehicle_id or a.name }}</strong></td>
+                  <td>{{ a.vehicle_type }}</td>
+                  <td class="{% if a.status=='Available' %}status-available{% elif a.status=='On the way' %}status-oncall{% else %}status-busy{% endif %}">{{ a.status }}</td>
+                  <td class="small">{% if a.lat %}{{ '%.4f'|format(a.lat) }}, {{ '%.4f'|format(a.lng) }}{% else %}—{% endif %}</td>
+                  <td>
+                    <form method="POST" action="{{ url_for('update_resource') }}" class="d-inline">
+                      <input type="hidden" name="type" value="ambulance">
+                      <input type="hidden" name="id" value="{{ a.id }}">
+                      <select name="status" class="form-select form-select-sm update-select d-inline-block w-auto" onchange="this.form.submit()">
+                        <option value="Available" {% if a.status=='Available' %}selected{% endif %}>Available</option>
+                        <option value="On the way" {% if a.status=='On the way' %}selected{% endif %}>On the way</option>
+                        <option value="Occupied" {% if a.status=='Occupied' %}selected{% endif %}>Occupied</option>
+                      </select>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container text-center">
+    <p class="mb-0">&copy; 2026 MedCare Emergency Resource Manager · OpenHack26 · Team HT-03</p>
+    <p class="mb-0 powered-by">Powered by <strong>Musafir Devs</strong></p>
+  </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /* ===== Mobile sidebar ===== */
+  const sidebar = document.getElementById('mobileSidebar');
+  const sidebarOverlay = document.getElementById('mobileSidebarOverlay');
+  const hamburger = document.getElementById('mobileHamburger');
+  function openSidebar() {
+    sidebar.classList.add('open'); sidebarOverlay.classList.add('open');
+    hamburger.classList.add('active'); document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open'); sidebarOverlay.classList.remove('open');
+    hamburger.classList.remove('active'); document.body.style.overflow = '';
+  }
+  hamburger?.addEventListener('click', e => { e.preventDefault(); sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); });
+  document.getElementById('mobileSidebarClose')?.addEventListener('click', e => { e.preventDefault(); closeSidebar(); });
+  sidebarOverlay?.addEventListener('click', closeSidebar);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+
+  /* Auto-refresh — keep active tab visible across reloads */
+  const activeTab = localStorage.getItem('resTab');
+  if (activeTab) {
+    const link = document.querySelector('.res-pills [href="#' + activeTab + '"]');
+    if (link) { link.click(); }
+  }
+  document.querySelectorAll('.res-pills .nav-link').forEach(l => {
+    l.addEventListener('click', () => localStorage.setItem('resTab', l.getAttribute('href').slice(1)));
+  });
+  setInterval(() => { window.location.reload(); }, 5000);
+</script>
+{% endblock %}

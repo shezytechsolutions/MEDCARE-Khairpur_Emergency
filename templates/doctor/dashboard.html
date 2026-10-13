@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+{% block title %}Doctor Dashboard - MedCare Khairpur{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ===== Doctor module extras (theme-consistent) ===== */
+  .doc-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 26px; }
+  .doc-stat-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 16px; display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 6px 20px rgba(15,30,50,0.05);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .doc-stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(15,30,50,0.10); }
+  .doc-stat-icon {
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;
+  }
+  .doc-stat-card h3 { margin: 0; font-family: 'Montserrat', sans-serif; font-size: 1.5rem; color: var(--navy); }
+  .doc-stat-card p { margin: 0; font-size: 0.8rem; color: var(--muted); }
+  .doc-status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;
+  }
+  .doc-status-pill.available { background: #e8f5e9; color: #2e7d32; }
+  .doc-status-pill.busy     { background: #fdecea; color: #c62828; }
+  .doc-status-pill.oncall   { background: #fff4dd; color: #b97c00; }
+  .doc-profile {
+    display: flex; align-items: center; gap: 16px;
+  }
+  .doc-avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: linear-gradient(120deg, var(--navy), var(--navy-light));
+    color: var(--yellow); font-size: 1.6rem;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    box-shadow: 0 6px 18px rgba(31,57,113,0.25);
+  }
+  .doc-card-header {
+    display: flex; align-items: center; gap: 14px; padding: 20px 24px;
+    background: linear-gradient(120deg, var(--navy), var(--navy-light));
+    color: #fff; border-radius: 12px 12px 0 0;
+  }
+  .doc-card-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,174,39,0.22); color: var(--yellow);
+    display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0;
+  }
+  .doc-card-header h5 { margin: 0; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 1.05rem; color: #fff; }
+  .doc-card-header p { margin: 2px 0 0; font-size: 0.78rem; color: rgba(255,255,255,0.75); }
+  .content-card .card-header { border-radius: 12px 12px 0 0; }
+  .status-form .form-select { border-radius: 10px; padding: 11px 14px; border: 1.5px solid var(--border); background: #fbfcfe; }
+  .status-form .form-select:focus { border-color: var(--navy); box-shadow: 0 0 0 4px rgba(31,57,113,0.10); }
+  .btn-status-update {
+    width: 100%; margin-top: 4px; background: var(--navy); color: #fff; border: none;
+    border-radius: 10px; padding: 13px 16px; font-weight: 700; cursor: pointer;
+    transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .btn-status-update:hover { background: var(--navy-light); transform: translateY(-2px); box-shadow: 0 10px 24px rgba(31,57,113,0.30); }
+  .table thead th { background: #f7f9fc; color: var(--navy); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 1px solid var(--border) !important; }
+  .table td { vertical-align: middle; }
+  .track-link { color: var(--navy); font-weight: 600; }
+  .track-link:hover { color: var(--red); }
+  @media (max-width: 767px) {
+    .doc-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .doc-stat-card { padding: 14px 12px; }
+    .doc-stat-icon { width: 40px; height: 40px; font-size: 1rem; }
+    .doc-stat-card h3 { font-size: 1.2rem; }
+  }
+  @media (max-width: 400px) {
+    .doc-stats { gap: 8px; }
+    .doc-stat-card p { font-size: 0.72rem; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<header>
+  <!-- Top bar: on mobile show ONLY the phone number -->
+  <div class="header-top">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-7 col-lg-7">
+          <span class="ht-question d-none d-md-inline"><i class="bi bi-question-circle me-1"></i> Need help? We are 24/7 available</span>
+          <a href="tel:+923001234567" class="ht-phone-mobile d-md-none"><i class="bi bi-telephone-fill me-1"></i> +92 300 1234567</a>
+        </div>
+        <div class="col-5 col-lg-5 text-end">
+          <span class="ht-phone d-none d-md-inline"><i class="bi bi-telephone me-1"></i> +92 300 1234567</span>
+          <span class="ht-emergency d-none d-md-inline"><i class="bi bi-telephone-fill me-1"></i> THE Emergency Contacts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop: logo + nav (sticky) -->
+  <div class="header-logo-menu sticker">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-3 col-12">
+          <div class="logo">
+            <a href="{{ url_for('index') }}">
+              <img src="{{ url_for('static', filename='img/logo101.png') }}" alt="MedCare Emergency Logo" class="brand-logo">
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-9 col-12">
+          <div class="mainmenu-area">
+            <nav class="mainmenu d-none d-lg-block">
+              <ul id="nav">
+                <li class="current"><a href="{{ url_for('doctor_dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('doctor_patients') }}">My Patients</a></li>
+                <li><a href="{{ url_for('admin_track') }}"><i class="bi bi-broadcast me-1"></i> Track Ambulances</a></li>
+                <li><a href="{{ url_for('logout') }}" class="nav-ambulance">Logout</a></li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile: white bar (logo + hamburger) -->
+  <div class="mobile-menu-area">
+    <div class="mobile-topbar-inner">
+      <div class="mobile-logo">
+        <a href="{{ url_for('index') }}">
+          <img src="{{ url_for('static', filename='img/logo101.png') }}" alt="MedCare Emergency Logo" class="brand-logo">
+        </a>
+      </div>
+      <div class="mobile-topbar-right">
+        <a href="#" class="mobile-hamburger" id="mobileHamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile slide-out sidebar -->
+  <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay"></div>
+  <aside class="mobile-sidebar" id="mobileSidebar">
+    <div class="mobile-sidebar-header">
+      <span>Doctor Menu</span>
+      <a href="#" class="mobile-sidebar-close" id="mobileSidebarClose" aria-label="Close">&times;</a>
+    </div>
+    <nav class="mobile-sidebar-nav">
+      <ul>
+        <li><a href="{{ url_for('doctor_dashboard') }}"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a></li>
+        <li><a href="{{ url_for('doctor_patients') }}"><i class="bi bi-people me-2"></i> My Patients</a></li>
+        <li><a href="{{ url_for('admin_track') }}"><i class="bi bi-broadcast me-2"></i> Track Ambulances</a></li>
+        <li><a href="{{ url_for('index') }}"><i class="bi bi-house-door me-2"></i> Home</a></li>
+        <li><a href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+      </ul>
+    </nav>
+  </aside>
+</header>
+
+<!-- ================= PAGE HERO (about-hero style) ================= -->
+<div class="about-hero-area about-hero-small">
+  <div class="about-hero-bg"></div>
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-8 col-md-12">
+        <div class="about-hero-content">
+          <div class="doc-profile">
+            <div class="doc-avatar"><i class="bi bi-person-badge"></i></div>
+            <div>
+              <h2 class="about-hero-title" style="font-size: 32px; margin-bottom: 6px;">{{ user.name }}</h2>
+              <p class="about-hero-text" style="margin-bottom: 8px;">
+                <i class="bi bi-activity me-1"></i> {{ user.specialty }} · MedCare Khairpur
+              </p>
+              <span class="doc-status-pill {% if user.status == 'Available' %}available{% elif user.status == 'Busy' %}busy{% else %}oncall{% endif %}">
+                <i class="bi bi-circle-fill" style="font-size:0.55rem;"></i> {{ user.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-12 d-none d-lg-block">
+        <div class="text-center" style="font-size: 5rem; opacity: 0.25;">🩺</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<div class="container section-padding" style="padding-top: 36px; padding-bottom: 50px;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} py-2 form-alert">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Stat cards -->
+  <div class="doc-stats">
+    <div class="doc-stat-card">
+      <div class="doc-stat-icon" style="background:#fdecea;color:#e53935;"><i class="bi bi-clipboard2-pulse"></i></div>
+      <div><h3>{{ my_cases|length }}</h3><p>Active Patients</p></div>
+    </div>
+    <div class="doc-stat-card">
+      <div class="doc-stat-icon" style="background:#e8eefb;color:#1F3971;"><i class="bi bi-heart-pulse"></i></div>
+      <div><h3>{{ my_cases|selectattr('priority','equalto','Critical')|list|length }}</h3><p>Critical Cases</p></div>
+    </div>
+    <div class="doc-stat-card">
+      <div class="doc-stat-icon" style="background:#fff4dd;color:#b97c00;"><i class="bi bi-clock-history"></i></div>
+      <div><h3>{{ user.status }}</h3><p>My Status</p></div>
+    </div>
+    <div class="doc-stat-card">
+      <div class="doc-stat-icon" style="background:#e8f5e9;color:#2e7d32;"><i class="bi bi-person-workspace"></i></div>
+      <div><h3>{{ user.specialty }}</h3><p>Specialty</p></div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-4">
+      <!-- Status update card -->
+      <div class="content-card">
+        <div class="doc-card-header">
+          <div class="doc-card-icon"><i class="bi bi-toggle-on"></i></div>
+          <div>
+            <h5>Update My Status</h5>
+            <p>Keep dispatch informed of your availability</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('doctor_update_status') }}" class="status-form">
+            <label class="form-label">Current availability</label>
+            <select name="status" class="form-select mb-3">
+              <option value="Available" {% if user.status=='Available' %}selected{% endif %}>🟢 Available</option>
+              <option value="Busy" {% if user.status=='Busy' %}selected{% endif %}>🔴 Busy</option>
+              <option value="On-call" {% if user.status=='On-call' %}selected{% endif %}>🟡 On-call</option>
+            </select>
+            <button type="submit" class="btn-status-update">
+              <i class="bi bi-check2-circle me-2"></i> Save Status
+            </button>
+          </form>
+          <hr>
+          <a href="{{ url_for('admin_track') }}" class="track-link small">
+            <i class="bi bi-broadcast me-1"></i> Open live ambulance fleet map
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <!-- Assigned patients card -->
+      <div class="content-card">
+        <div class="doc-card-header">
+          <div class="doc-card-icon"><i class="bi bi-people"></i></div>
+          <div class="flex-grow-1">
+            <h5>My Assigned Patients (Active)</h5>
+            <p>Auto-assigned by the smart allocation engine</p>
+          </div>
+          <a href="{{ url_for('doctor_patients') }}" class="btn btn-sm" style="background:var(--yellow);color:var(--navy);font-weight:700;">View All</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Patient</th>
+                  <th>Priority</th>
+                  <th>Condition</th>
+                  <th>Bed</th>
+                  <th>Hospital</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in my_cases %}
+                <tr>
+                  <td><strong>{{ c.case_code }}</strong></td>
+                  <td>{{ c.patient_name }} <span class="text-muted small">({{ c.age }})</span></td>
+                  <td><span class="badge badge-{{ c.priority|lower }}">{{ c.priority }}</span></td>
+                  <td class="small text-truncate" style="max-width:180px;">{{ c.condition }}</td>
+                  <td>{% if c.bed %}<span class="badge bg-secondary">{{ c.bed.bed_code }}</span>{% else %}—{% endif %}</td>
+                  <td class="small">{{ c.hospital_name or '—' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No active patients assigned to you right now.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= FOOTER ================= -->
+<footer class="site-footer">
+  <div class="container text-center">
+    <p class="mb-0">&copy; 2026 MedCare Emergency Resource Manager · OpenHack26 · Team HT-03</p>
+    <p class="mb-0 powered-by">Powered by <strong>Musafir Devs</strong></p>
+  </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /* ===== Mobile sidebar (same as index) ===== */
+  const sidebar = document.getElementById('mobileSidebar');
+  const sidebarOverlay = document.getElementById('mobileSidebarOverlay');
+  const hamburger = document.getElementById('mobileHamburger');
+  function openSidebar() {
+    sidebar.classList.add('open');
+    sidebarOverlay.classList.add('open');
+    hamburger.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    sidebarOverlay.classList.remove('open');
+    hamburger.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  hamburger?.addEventListener('click', e => { e.preventDefault(); sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); });
+  document.getElementById('mobileSidebarClose')?.addEventListener('click', e => { e.preventDefault(); closeSidebar(); });
+  sidebarOverlay?.addEventListener('click', closeSidebar);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+</script>
+{% endblock %}

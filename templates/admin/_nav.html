@@ -1,0 +1,66 @@
+<header>
+  <!-- Desktop: logo + nav (sticky) -->
+  <div class="header-logo-menu sticker">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-3 col-12">
+          <div class="logo">
+            <a href="{{ url_for('admin_dashboard') }}">
+              <img src="{{ url_for('static', filename='img/logo101.png') }}" alt="MedCare Emergency Logo" class="brand-logo">
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-9 col-12">
+          <div class="mainmenu-area">
+            <nav class="mainmenu d-none d-lg-block">
+              <ul id="nav">
+                <li class="current"><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('admin_cases') }}">Cases</a></li>
+                <li><a href="{{ url_for('admin_resources') }}">Resources</a></li>
+                <li><a href="{{ url_for('admin_allocate') }}">Allocate</a></li>
+                <li><a href="{{ url_for('admin_track') }}"><i class="bi bi-broadcast me-1"></i> Track</a></li>
+                <li><a href="{{ url_for('logout') }}" class="nav-ambulance">Logout</a></li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile: white bar (logo + hamburger) -->
+  <div class="mobile-menu-area">
+    <div class="mobile-topbar-inner">
+      <div class="mobile-logo">
+        <a href="{{ url_for('admin_dashboard') }}">
+          <img src="{{ url_for('static', filename='img/logo101.png') }}" alt="MedCare Emergency Logo" class="brand-logo">
+        </a>
+      </div>
+      <div class="mobile-topbar-right">
+        <a href="#" class="mobile-hamburger" id="mobileHamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile slide-out sidebar -->
+  <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay"></div>
+  <aside class="mobile-sidebar" id="mobileSidebar">
+    <div class="mobile-sidebar-header">
+      <span>Admin Menu</span>
+      <a href="#" class="mobile-sidebar-close" id="mobileSidebarClose" aria-label="Close">&times;</a>
+    </div>
+    <nav class="mobile-sidebar-nav">
+      <ul>
+        <li><a href="{{ url_for('admin_dashboard') }}"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a></li>
+        <li><a href="{{ url_for('admin_cases') }}"><i class="bi bi-clipboard2-pulse me-2"></i> Cases</a></li>
+        <li><a href="{{ url_for('admin_resources') }}"><i class="bi bi-boxes me-2"></i> Resources</a></li>
+        <li><a href="{{ url_for('admin_allocate') }}"><i class="bi bi-magic me-2"></i> Smart Allocate</a></li>
+        <li><a href="{{ url_for('admin_track') }}"><i class="bi bi-broadcast me-2"></i> Track Ambulances</a></li>
+        <li><a href="{{ url_for('index') }}"><i class="bi bi-house-door me-2"></i> Home</a></li>
+        <li><a href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+      </ul>
+    </nav>
+  </aside>
+</header>

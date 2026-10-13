@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Ambulance Unit - MedCare{% endblock %}
+
+{% block body %}
+<nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('ambulance_dashboard') }}">
+      <div class="logo-icon"><i class="bi bi-plus-lg"></i></div>
+      <span class="fw-bold text-primary">MEDCARE</span>
+      <small class="text-muted">Ambulance</small>
+    </a>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+      <a href="{{ url_for('logout') }}" class="nav-link text-danger">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container">
+    <h1><i class="bi bi-ambulance me-2"></i>{{ user.vehicle_id or user.name }}</h1>
+    <p>{{ user.vehicle_type }} · Status: <strong>{{ user.status }}</strong> · Service range: 20 km</p>
+  </div>
+</div>
+
+<div class="container" style="padding-top: 36px; padding-bottom: 40px;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="content-card">
+        <div class="card-header">Update Status / Location</div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('ambulance_update_status') }}">
+            <div class="mb-3">
+              <label class="form-label">Status</label>
+              <select name="status" class="form-select">
+                <option value="Available" {% if user.status=='Available' %}selected{% endif %}>Available</option>
+                <option value="On the way" {% if user.status=='On the way' %}selected{% endif %}>On the way</option>
+                <option value="Occupied" {% if user.status=='Occupied' %}selected{% endif %}>Occupied</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Current Lat</label>
+              <input type="text" name="lat" class="form-control" value="{{ user.lat or '' }}" placeholder="24.86">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Current Lng</label>
+              <input type="text" name="lng" class="form-control" value="{{ user.lng or '' }}" placeholder="67.00">
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Update</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-8">
+      <div class="content-card">
+        <div class="card-header">My Assigned Pickups</div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Patient</th>
+                  <th>Priority</th>
+                  <th>Address</th>
+                  <th>Distance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in my_cases %}
+                <tr>
+                  <td><strong>{{ c.case_code }}</strong></td>
+                  <td>{{ c.patient_name }}</td>
+                  <td><span class="badge badge-{{ c.priority|lower }}">{{ c.priority }}</span></td>
+                  <td>{{ c.patient_address or '—' }}</td>
+                  <td>
+                    {% if c.distance_km is not none %}
+                      <span class="{% if c.distance_km <= 20 %}text-success{% else %}text-danger{% endif %}">
+                        {{ c.distance_km }} km
+                      </span>
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No active assignments. Stay available within 20 km range.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

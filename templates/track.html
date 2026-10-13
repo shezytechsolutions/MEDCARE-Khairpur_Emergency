@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+{% block title %}Tracking {{ case.case_code }} - MedCare Khairpur{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  .track-card-header {
+    display: flex; align-items: center; gap: 14px; padding: 20px 24px;
+    background: linear-gradient(120deg, var(--navy), var(--navy-light));
+    color: #fff; border-radius: 12px 12px 0 0;
+  }
+  .track-card-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,174,39,0.22); color: var(--yellow);
+    display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0;
+  }
+  .track-card-header h5 { margin: 0; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 1.05rem; color: #fff; }
+  .track-card-header p { margin: 2px 0 0; font-size: 0.78rem; color: rgba(255,255,255,0.75); }
+  .content-card { overflow: hidden; }
+
+  /* ===== Phase stepper (Hospital -> Pickup -> Hospital) ===== */
+  .phase-stepper {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; margin: 0 auto 22px; max-width: 640px;
+  }
+  .phase-step { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+  .phase-dot {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    background: #fff; border: 2px solid var(--border); color: var(--muted);
+    transition: all 0.3s ease;
+  }
+  .phase-step.active .phase-dot {
+    background: var(--navy); border-color: var(--navy); color: #fff;
+    box-shadow: 0 0 0 6px rgba(31,57,113,0.15);
+    animation: phasePulse 1.6s infinite;
+  }
+  .phase-step.done .phase-dot { background: #2e7d32; border-color: #2e7d32; color: #fff; }
+  .phase-step span { font-size: 0.72rem; font-weight: 600; color: var(--muted); text-align: center; }
+  .phase-step.active span { color: var(--navy); }
+  .phase-step.done span { color: #2e7d32; }
+  @keyframes phasePulse {
+    0%,100% { box-shadow: 0 0 0 6px rgba(31,57,113,0.15); }
+    50%     { box-shadow: 0 0 0 12px rgba(31,57,113,0.05); }
+  }
+  .phase-line {
+    flex: 1 1 auto; height: 3px; min-width: 26px; margin: 0 4px 22px;
+    background: var(--border); border-radius: 2px; position: relative; overflow: hidden;
+  }
+  .phase-line.done { background: #2e7d32; }
+  .phase-line.active-flow { background: linear-gradient(90deg, #2e7d32, var(--yellow)); }
+
+  /* ===== ETA banner ===== */
+  .eta-banner {
+    display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(120deg, var(--navy), var(--navy-light));
+    border-radius: 12px; padding: 16px 20px; color: #fff; margin-bottom: 22px;
+    border-left: 5px solid var(--yellow);
+  }
+  .eta-banner .eta-num {
+    font-family: 'Montserrat', sans-serif; font-size: 2rem; font-weight: 800;
+    color: var(--yellow); line-height: 1;
+    min-width: 90px;
+  }
+  .eta-banner .eta-label { font-size: 0.78rem; color: rgba(255,255,255,0.75); }
+  .eta-banner .eta-phase { font-size: 0.95rem; font-weight: 600; }
+
+  /* ===== Detail rows ===== */
+  .detail-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 11px 0; border-bottom: 1px solid #f0f2f5; font-size: 0.88rem;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-ico {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
+  }
+  .detail-row .dl { color: var(--muted); font-size: 0.76rem; display: block; }
+  .detail-row .dv { font-weight: 600; color: var(--dark); }
+
+  #map, .map-placeholder { border-radius: 0 0 12px 12px; height: 480px; }
+  .map-loading {
+    height: 480px; display: flex; align-items: center; justify-content: center;
+    color: var(--muted); flex-direction: column; gap: 10px;
+  }
+  .live-badge {
+    background: var(--red); color: #fff; font-size: 0.7rem; font-weight: 700;
+    padding: 4px 12px; border-radius: 20px; letter-spacing: 0.5px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .live-dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: #fff; animation: livePulse 1.5s infinite;
+  }
+  @keyframes livePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .amb-popup { font-size: 0.85rem; line-height: 1.5; }
+
+  @media (max-width: 767px) {
+    #map, .map-placeholder, .map-loading { height: 320px; }
+    .eta-banner { padding: 14px 16px; }
+    .eta-banner .eta-num { font-size: 1.6rem; min-width: 70px; }
+    .phase-dot { width: 34px; height: 34px; font-size: 0.95rem; }
+    .phase-step span { font-size: 0.65rem; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<header>
+  <!-- Top bar: on mobile show ONLY the phone number -->
+  <div class="header-top">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-7 col-lg-7">
+          <span class="ht-question d-none d-md-inline"><i class="bi bi-question-circle me-1"></i> Need help? We are 24/7 available</span>
+          <a href="tel:+923001234567" class="ht-phone-mobile d-md-none"><i class="bi bi-telephone-fill me-1"></i> +92 300 1234567</a>
+        </div>
+        <div class="col-5 col-lg-5 text-end">
+          <span class="ht-phone d-none d-md-inline"><i class="bi bi-telephone me-1"></i> +92 300 1234567</span>
+          <span class="ht-emergency d-none d-md-inline"><i class="bi bi-telephone-fill me-1"></i> THE Emergency Contacts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop: logo + nav (sticky) -->
+  <div class="header-logo-menu sticker">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-3 col-12">
+          <div class="logo">
+            <a href="{{ url_for('index') }}">
+              <img src="{{ url_for('static', filename='img/logo101.png') }}" alt="MedCare Emergency Logo" class="brand-logo">
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-9 col-12">
+          <div class="mainmenu-area">
+            <nav class="mainmenu d-none d-lg-block">
+              <ul id="nav">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('request_help') }}">Emergency</a></li>
+                <li><a href="{{ url_for('request_help') }}" class="nav-ambulance">Ambulance</a></li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile: white bar (logo + hamburger) -->
+  <div class="mobile-menu-area">
+    <div class="mobile-topbar-inner">
+      <div class="mobile-logo">
+        <a href="{{ url_for('index') }}">
+          <img src="{{ url_for('static', filename='img/logo101.png') }}" alt="MedCare Emergency Logo" class="brand-logo">
+        </a>
+      </div>
+      <div class="mobile-topbar-right">
+        <a href="#" class="mobile-hamburger" id="mobileHamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile slide-out sidebar -->
+  <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay"></div>
+  <aside class="mobile-sidebar" id="mobileSidebar">
+    <div class="mobile-sidebar-header">
+      <span>Menu</span>
+      <a href="#" class="mobile-sidebar-close" id="mobileSidebarClose" aria-label="Close">&times;</a>
+    </div>
+    <nav class="mobile-sidebar-nav">
+      <ul>
+        <li><a href="{{ url_for('index') }}"><i class="bi bi-house-door me-2"></i> Home</a></li>
+        <li><a href="{{ url_for('request_help') }}"><i class="bi bi-exclamation-triangle me-2"></i> Emergency</a></li>
+        <li><a href="{{ url_for('request_help') }}"><i class="bi bi-ambulance me-2"></i> Ambulance</a></li>
+      </ul>
+    </nav>
+  </aside>
+</header>
+
+<!-- ================= PAGE HERO ================= -->
+<div class="about-hero-area about-hero-small">
+  <div class="about-hero-bg"></div>
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-8 col-md-12">
+        <div class="about-hero-content">
+          <h2 class="about-hero-title" style="font-size: 32px; margin-bottom: 8px;">
+            🚑 Live Tracking — {{ case.case_code }}
+          </h2>
+          <p class="about-hero-text" style="margin-bottom: 0;" id="trackSubtitle">
+            Ambulance is being dispatched — please stay at your location…
+          </p>
+        </div>
+      </div>
+      <div class="col-lg-4 d-none d-lg-block">
+        <div class="text-center" style="font-size: 5rem; opacity: 0.25;">🗺️</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TRACKING ================= -->
+<div class="container section-padding" style="padding-top: 36px; padding-bottom: 50px;">
+  <!-- Phase stepper -->
+  <div class="phase-stepper" id="phaseStepper">
+    <div class="phase-step" id="stepHospital">
+      <div class="phase-dot">🏥</div>
+      <span>Left Hospital</span>
+    </div>
+    <div class="phase-line" id="line1"></div>
+    <div class="phase-step" id="stepPickup">
+      <div class="phase-dot">📍</div>
+      <span>Patient Pickup</span>
+    </div>
+    <div class="phase-line" id="line2"></div>
+    <div class="phase-step" id="stepArrive">
+      <div class="phase-dot">🏥</div>
+      <span>At Hospital</span>
+    </div>
+  </div>
+
+  <!-- ETA banner -->
+  <div class="eta-banner" id="etaBanner" style="display:none;">
+    <div>
+      <div class="eta-num" id="etaNum">—</div>
+      <div class="eta-label">MINUTES</div>
+    </div>
+    <div>
+      <div class="eta-phase" id="etaPhase">Loading…</div>
+      <div class="eta-label" id="etaDetail"></div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Map -->
+    <div class="col-lg-8">
+      <div class="content-card">
+        <div class="track-card-header">
+          <div class="track-card-icon"><i class="bi bi-map"></i></div>
+          <div class="flex-grow-1">
+            <h5>Ambulance Route</h5>
+            <p id="routeInfo">Hospital → Your location → Hospital</p>
+          </div>
+          <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+        </div>
+        <div class="card-body p-0">
+          <div id="map"><div class="map-loading"><div class="spinner-border text-primary"></div><small>Locating ambulance…</small></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Case details -->
+    <div class="col-lg-4">
+      <div class="content-card mb-3">
+        <div class="track-card-header">
+          <div class="track-card-icon"><i class="bi bi-person-vcard"></i></div>
+          <div>
+            <h5>Patient &amp; Case</h5>
+            <p>Reference {{ case.case_code }}</p>
+          </div>
+        </div>
+        <div class="card-body" style="padding: 10px 20px;">
+          <div class="detail-row">
+            <div class="detail-ico" style="background:#e8eefb;color:#1F3971;"><i class="bi bi-person"></i></div>
+            <div><span class="dl">Patient</span><span class="dv">{{ case.patient_name }} ({{ case.age }} yrs)</span></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-ico" style="background:#fdecea;color:#e53935;"><i class="bi bi-exclamation-triangle"></i></div>
+            <div><span class="dl">Priority</span><span class="badge badge-{{ case.priority|lower }}">{{ case.priority }}</span></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-ico" style="background:#fff4dd;color:#b97c00;"><i class="bi bi-activity"></i></div>
+            <div><span class="dl">Condition</span><span class="dv" style="font-weight:400;">{{ case.condition }}</span></div>
+          </div>
+          {% if case.patient_address %}
+          <div class="detail-row">
+            <div class="detail-ico" style="background:#e8f5e9;color:#2e7d32;"><i class="bi bi-geo-alt"></i></div>
+            <div><span class="dl">Pickup Address</span><span class="dv" style="font-weight:400;">{{ case.patient_address }}</span></div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="content-card mb-3">
+        <div class="track-card-header">
+          <div class="track-card-icon"><i class="bi bi-ambulance"></i></div>
+          <div>
+            <h5>Ambulance</h5>
+            <p>Unit &amp; live status</p>
+          </div>
+        </div>
+        <div class="card-body" style="padding: 10px 20px;">
+          <div class="detail-row">
+            <div class="detail-ico" style="background:#fdecea;color:#e53935;"><i class="bi bi-truck"></i></div>
+            <div><span class="dl">Unit</span><span class="dv" id="ambUnit">Assigning…</span></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-ico" style="background:#e8eefb;color:#1F3971;"><i class="bi bi-flag"></i></div>
+            <div><span class="dl">Departed From</span><span class="dv" id="departFrom">—</span></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-ico" style="background:#fff4dd;color:#b97c00;"><i class="bi bi-clock"></i></div>
+            <div><span class="dl">Current Phase</span><span class="dv" id="phaseText">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-card">
+        <div class="track-card-header">
+          <div class="track-card-icon"><i class="bi bi-hospital"></i></div>
+          <div>
+            <h5>Assigned Resources</h5>
+            <p>Reserved for your arrival</p>
+          </div>
+        </div>
+        <div class="card-body" style="padding: 10px 20px;">
+          <div class="detail-row">
+            <div class="detail-ico" style="background:#e8eefb;color:#1F3971;"><i class="bi bi-hospital"></i></div>
+            <div><span class="dl">Hospital</span><span class="dv" id="resHospital">—</span></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-ico" style="background:#fdecea;color:#e53935;"><i class="bi bi-person-badge"></i></div>
+            <div><span class="dl">Doctor</span><span class="dv" id="resDoctor">—</span></div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-ico" style="background:#e8f5e9;color:#2e7d32;"><i class="bi bi-bed"></i></div>
+            <div><span class="dl">Bed Reserved</span><span class="dv" id="resBed">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container text-center">
+    <p class="mb-0">&copy; 2026 MedCare Emergency Resource Manager · OpenHack26 · Team HT-03</p>
+    <p class="mb-0 powered-by">Powered by <strong>Musafir Devs</strong></p>
+  </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  /* ===== Mobile sidebar ===== */
+  const sidebar = document.getElementById('mobileSidebar');
+  const sidebarOverlay = document.getElementById('mobileSidebarOverlay');
+  const hamburger = document.getElementById('mobileHamburger');
+  function openSidebar() {
+    sidebar.classList.add('open'); sidebarOverlay.classList.add('open');
+    hamburger.classList.add('active'); document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open'); sidebarOverlay.classList.remove('open');
+    hamburger.classList.remove('active'); document.body.style.overflow = '';
+  }
+  hamburger?.addEventListener('click', e => { e.preventDefault(); sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); });
+  document.getElementById('mobileSidebarClose')?.addEventListener('click', e => { e.preventDefault(); closeSidebar(); });
+  sidebarOverlay?.addEventListener('click', closeSidebar);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+
+  /* ===== Live tracking ===== */
+  const CASE_URL = "{{ url_for('track_api', case_code=case.case_code) }}";
+  let map, ambMarker, patientMarker, hospMarker, line1, line2, initialized = false;
+
+  function initMap(start, patient, hospital) {
+    if (initialized) return;
+    document.getElementById('map').innerHTML = '';
+    map = L.map('map').setView([patient.lat, patient.lng], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18, attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+    hospMarker = L.marker([hospital.lat, hospital.lng], {
+      icon: L.divIcon({className: '', html: '🏥', iconSize: [34, 34]})
+    }).addTo(map).bindPopup('<div class="amb-popup"><strong>' + hospital.name + '</strong></div>');
+    patientMarker = L.marker([patient.lat, patient.lng], {
+      icon: L.divIcon({className: '', html: '📍', iconSize: [30, 30]})
+    }).addTo(map).bindPopup('<div class="amb-popup"><strong>Your pickup location</strong><br>' + (patient.address || '') + '</div>');
+    ambMarker = L.marker([start.lat, start.lng], {
+      icon: L.divIcon({className: '', html: '🚑', iconSize: [32, 32]})
+    }).addTo(map).bindPopup('<div class="amb-popup">Ambulance en route</div>');
+    // hospital -> patient (yellow), patient -> hospital (blue)
+    line1 = L.polyline([[start.lat, start.lng], [patient.lat, patient.lng]], {color: '#FFAE27', weight: 4, dashArray: '8 6'}).addTo(map);
+    line2 = L.polyline([[patient.lat, patient.lng], [hospital.lat, hospital.lng]], {color: '#1e88e5', weight: 4, dashArray: '8 6'}).addTo(map);
+    map.fitBounds([[start.lat, start.lng], [hospital.lat, hospital.lng]], {padding: [50, 50]});
+    initialized = true;
+  }
+
+  function setStepper(phase) {
+    const sH = document.getElementById('stepHospital'),
+          sP = document.getElementById('stepPickup'),
+          sA = document.getElementById('stepArrive'),
+          l1 = document.getElementById('line1'),
+          l2 = document.getElementById('line2');
+    [sH, sP, sA].forEach(s => s.classList.remove('active', 'done'));
+    [l1, l2].forEach(l => l.classList.remove('done', 'active-flow'));
+    if (phase === 'to_patient') {
+      sH.classList.add('active'); l1.classList.add('active-flow');
+    } else if (phase === 'to_hospital') {
+      sH.classList.add('done'); sP.classList.add('done');
+      l1.classList.add('done'); l2.classList.add('active-flow');
+    } else if (phase === 'arrived') {
+      sH.classList.add('done'); sP.classList.add('done'); sA.classList.add('done');
+      l1.classList.add('done'); l2.classList.add('done');
+    }
+  }
+
+  const phaseTexts = {
+    to_patient: '🚑 Coming to your location',
+    to_hospital: '🚑 Patient onboard — heading to hospital',
+    arrived: '✅ Arrived at hospital'
+  };
+
+  async function poll() {
+    try {
+      const res = await fetch(CASE_URL);
+      const d = await res.json();
+      const c = d.case || {};
+
+      // resources
+      document.getElementById('resHospital').textContent = c.hospital || '—';
+      document.getElementById('resDoctor').textContent = c.doctor || '—';
+      document.getElementById('resBed').textContent = c.bed || '—';
+
+      if (!d.dispatched || !d.position) {
+        document.getElementById('phaseText').textContent = 'Not dispatched yet';
+        document.getElementById('etaBanner').style.display = 'none';
+        if (c.patient_lat) initMap(
+          {lat: c.patient_lat, lng: c.patient_lng},
+          {lat: c.patient_lat, lng: c.patient_lng, address: c.patient_address || ''},
+          {lat: c.patient_lat, lng: c.patient_lng, name: c.hospital || 'Hospital'});
+        return;
+      }
+
+      initMap(d.start, d.patient, d.hospital);
+      ambMarker.setLatLng([d.position.lat, d.position.lng]);
+
+      // ambulance card
+      document.getElementById('ambUnit').textContent = c.ambulance || '—';
+      document.getElementById('departFrom').textContent = (d.start && d.start.name) ? d.start.name : (c.hospital || '—');
+      document.getElementById('phaseText').textContent = phaseTexts[d.phase] || d.phase;
+
+      // stepper
+      setStepper(d.phase);
+
+      // ETA banner
+      const banner = document.getElementById('etaBanner');
+      banner.style.display = 'flex';
+      document.getElementById('etaNum').textContent = d.eta_min;
+      document.getElementById('etaPhase').textContent = phaseTexts[d.phase] || d.phase;
+      document.getElementById('etaDetail').textContent =
+        d.phase === 'to_patient'
+          ? ('Reaching you in ~' + (d.eta_to_patient_min || d.eta_min) + ' min')
+          : (d.phase === 'to_hospital' ? 'Arriving at hospital shortly' : 'Handover to medical team');
+
+      // subtitle
+      document.getElementById('trackSubtitle').textContent =
+        'Case ' + c.code + ' · Status: ' + c.status +
+        (d.phase !== 'arrived' ? ' · ETA ' + d.eta_min + ' min' : ' · Completed');
+      document.getElementById('routeInfo').textContent =
+        (d.start.name || 'Hospital') + ' → Your location → ' + d.hospital.name;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  poll();
+  setInterval(poll, 2000);
+</script>
+{% endblock %}
